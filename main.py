@@ -1,7 +1,8 @@
 from collections import UserDict
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from date_utils import adjust_for_weekend
 import pickle
+
 
 class Field:
     def __init__(self, value):
@@ -10,49 +11,49 @@ class Field:
     def __str__(self):
         return str(self.value)
 
+
 class Name(Field):
-		pass
+    pass
+
 
 class Phone(Field):
     def __init__(self, value: str):
         if not value.isdigit() or len(value) != 10:
             raise ValueError("Phone number must contain exactly 10 digits")
         super().__init__(value)
-        
+
 
 class Record:
     def __init__(self, name):
         self.name = Name(name)
         self.phones: list[Phone] = []
         self.birthday = None
-    
+
     def add_phone(self, phone: str):
-           self.phones.append(Phone(phone))
-    
+        self.phones.append(Phone(phone))
+
     def remove_phone(self, phone: str):
-           phone_obj = self.find_phone(phone)
-           self.phones.remove(phone_obj)
+        phone_obj = self.find_phone(phone)
+        self.phones.remove(phone_obj)
 
     def edit_phone(self, old_phone: str, new_phone: str):
-           phone_obj = self.find_phone(old_phone)
-           if phone_obj is None:
+        phone_obj = self.find_phone(old_phone)
+        if phone_obj is None:
             raise ValueError("Old phone is not exist")
-           phone_obj.value = Phone(new_phone).value
-    
+        phone_obj.value = Phone(new_phone).value
+
     def find_phone(self, phone: str):
         for p in self.phones:
-                if p.value == phone:
-                    return p
+            if p.value == phone:
+                return p
         return None
-    
-    def add_birthday(self, birthday: str):
-         self.birthday = Birthday(birthday)
-         
 
-        
+    def add_birthday(self, birthday: str):
+        self.birthday = Birthday(birthday)
 
     def __str__(self):
         return f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}"
+
 
 class AddressBook(UserDict):
 
@@ -61,7 +62,7 @@ class AddressBook(UserDict):
 
     def find(self, name: str):
         return self.data.get(name)
-    
+
     def delete(self, name):
         del self.data[name]
 
@@ -83,14 +84,15 @@ class AddressBook(UserDict):
             congratulation_date = adjust_for_weekend(birthday_this_year)
 
             if 0 <= (congratulation_date - today).days <= days:
-                result.append({
-                    "name": record.name.value,
-                    "congratulation_date": congratulation_date.strftime("%d.%m.%Y")
-                })
+                result.append(
+                    {
+                        "name": record.name.value,
+                        "congratulation_date": congratulation_date.strftime("%d.%m.%Y"),
+                    }
+                )
 
         return result
 
- 
     def __str__(self):
         if not self.data:
             return "Address book is empty."
@@ -98,10 +100,7 @@ class AddressBook(UserDict):
         result = []
         for record in self.data.values():
             phones = "; ".join(p.value for p in record.phones)
-            birthday = (
-                record.birthday.value
-                if record.birthday else "N/A"
-            )
+            birthday = record.birthday.value if record.birthday else "N/A"
             result.append(
                 f"Name: {record.name.value}, Phones: {phones}, Birthday: {birthday}"
             )
@@ -116,9 +115,9 @@ class Birthday(Field):
             raise ValueError("Invalid date format. Use DD.MM.YYYY")
         super().__init__(value)
 
-    
     def __str__(self):
         return self.value
+
 
 def input_error(func):
     def inner(*args, **kwargs):
@@ -132,6 +131,7 @@ def input_error(func):
             return "Contact not found."
         except AttributeError:
             return "Contact not found."
+
     return inner
 
 
@@ -147,9 +147,10 @@ def add_birthday(args, book: AddressBook):
     name, birthday, *_ = args
 
     record = book.find(name)
-        
+
     record.add_birthday(birthday)
-    return "Birthday added."    
+    return "Birthday added."
+
 
 @input_error
 def show_birthday(args, book: AddressBook):
@@ -160,7 +161,8 @@ def show_birthday(args, book: AddressBook):
     if record.birthday is None:
         return "Birthday not set."
 
-    return record.birthday.value 
+    return record.birthday.value
+
 
 @input_error
 def birthdays(args, book: AddressBook):
@@ -171,13 +173,11 @@ def birthdays(args, book: AddressBook):
 
     result = []
     for item in upcoming:
-        result.append(
-            f"{item['name']}: {item['congratulation_date']}"
-        )
+        result.append(f"{item['name']}: {item['congratulation_date']}")
 
-    return "\n".join(result)  
+    return "\n".join(result)
 
-    
+
 @input_error
 def add_contact(args, book: AddressBook):
     name, phone, *_ = args
@@ -191,25 +191,28 @@ def add_contact(args, book: AddressBook):
         record.add_phone(phone)
     return message
 
+
 @input_error
 def change_contact(args, book: AddressBook):
     name, old_phone, new_phone, *_ = args
 
     record = book.find(name)
-    
+
     record.edit_phone(old_phone, new_phone)
     return "Phone number updated."
+
 
 @input_error
 def show_phone(args, book: AddressBook):
     name, *_ = args
 
     record = book.find(name)
-    
+
     if not record.phones:
         return "No phone numbers."
 
     return "; ".join(phone.value for phone in record.phones)
+
 
 @input_error
 def show_all_contacts(args, book):
@@ -219,6 +222,7 @@ def show_all_contacts(args, book):
 def save_data(book: AddressBook, filename="addressbook.pkl"):
     with open(filename, "wb") as f:
         pickle.dump(book, f)
+
 
 def load_data(filename="addressbook.pkl"):
     try:
@@ -270,7 +274,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
